@@ -1,0 +1,31 @@
+services:
+  db:
+    image: kartoza/postgis:16-3.4
+    platform: linux/arm64/v8
+    container_name: location-tracker-db
+    environment:
+      POSTGRES_DB: location_tracker
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5434:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d location_tracker']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  app:
+    build: .
+    container_name: location-tracker-app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgres://postgres:postgres@db:5432/location_tracker
+    ports:
+      - '3001:3001'
+volumes:
+  pgdata:
