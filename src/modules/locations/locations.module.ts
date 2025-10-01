@@ -7,12 +7,21 @@ import { Area } from '../../entities/area.entity';
 import { UserAreaState } from '../../entities/user-area-state.entity';
 import { EntryLog } from '../../entities/entry-log.entity';
 import { LocationRepository } from '../../repositories/location.repository';
+import { AreaRepository } from '../../repositories/area.repository';
+import { UserAreaStateRepository } from '../../repositories/user-area-state.repository';
+import { EntryLogRepository } from '../../repositories/entry-log.repository';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Location, Area, UserAreaState, EntryLog]),
   ],
   controllers: [LocationsController],
-  providers: [LocationsService, LocationRepository],
+  providers: [
+    LocationsService,
+    LocationRepository,
+    AreaRepository,
+    UserAreaStateRepository,
+    EntryLogRepository,
+  ],
 })
 export class LocationsModule {}
