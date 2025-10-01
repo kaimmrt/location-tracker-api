@@ -6,11 +6,21 @@ import { GlobalExceptionFilter } from './shared/filters/global-exception.filter'
 import { RequestIdInterceptor } from './shared/interceptors/request-id.interceptor';
 import { LoggerService } from './shared/services/logger.service';
 import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
   const port = config.get<number>('PORT') ?? 3000;
+
+  app.use(helmet());
+
+  app.enableCors({
+    origin: process.env.CORS_ORIGIN || '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+    credentials: true,
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
