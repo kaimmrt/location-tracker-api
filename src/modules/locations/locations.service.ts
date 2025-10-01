@@ -46,10 +46,8 @@ export class LocationsService {
     const currentAreaIds = new Set(userStates.map((state) => state.areaId));
     const newAreaIds = new Set(areas.map((area) => area.id));
 
-    // Find areas user is entering (new areas)
     const enteringAreas = areas.filter((area) => !currentAreaIds.has(area.id));
 
-    // Find areas user is exiting (was inside, now outside)
     const exitingAreas = userStates.filter(
       (state) => state.isInside && !newAreaIds.has(state.areaId),
     );
@@ -59,10 +57,8 @@ export class LocationsService {
       'LocationsService',
     );
 
-    // Update states and log events
     const logEntries = [];
 
-    // Handle entering areas
     for (const area of enteringAreas) {
       await this.userAreaStateRepository.upsertState(dto.userId, area.id, true);
       logEntries.push({
@@ -72,7 +68,6 @@ export class LocationsService {
       });
     }
 
-    // Handle exiting areas
     for (const state of exitingAreas) {
       await this.userAreaStateRepository.upsertState(
         dto.userId,
@@ -86,7 +81,6 @@ export class LocationsService {
       });
     }
 
-    // Log all events
     if (logEntries.length > 0) {
       try {
         await this.entryLogRepository.insertManyEnterExit(logEntries);
@@ -99,7 +93,6 @@ export class LocationsService {
       }
     }
 
-    // Log location processing
     this.logger.logLocationProcess(
       dto.userId,
       dto.lat,

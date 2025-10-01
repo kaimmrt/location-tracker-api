@@ -45,7 +45,6 @@ export class LoggerService implements NestLoggerService {
     this.logger.verbose(message, { context });
   }
 
-  // Custom methods for structured logging
   logRequest(method: string, url: string): void {
     this.logger.info('Request received', {
       method,

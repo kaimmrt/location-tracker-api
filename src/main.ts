@@ -12,7 +12,6 @@ async function bootstrap() {
   const config = app.get(ConfigService);
   const port = config.get<number>('PORT') ?? 3000;
 
-  // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -21,14 +20,11 @@ async function bootstrap() {
     }),
   );
 
-  // Global exception filter
   const loggerService = app.get(LoggerService);
   app.useGlobalFilters(new GlobalExceptionFilter(loggerService));
 
-  // Global request ID interceptor
   app.useGlobalInterceptors(new RequestIdInterceptor());
 
-  // Swagger setup
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Location Tracker API')
     .setDescription('API for tracking user locations')

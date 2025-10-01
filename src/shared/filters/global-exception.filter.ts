@@ -48,7 +48,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       userMessage = 'Something went wrong. Please try again later.';
     }
 
-    // Log the error using our custom logger
     if (exception instanceof Error) {
       this.logger.logError(exception, 'GlobalExceptionFilter');
     } else {
