@@ -4,11 +4,12 @@ import { Area } from '../../entities/area.entity';
 import { AreasService } from './areas.service';
 import { AreasController } from './areas.controller';
 import { AreaRepository } from '../../repositories/area.repository';
+import { LoggerService } from '../../shared/services/logger.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Area])],
   controllers: [AreasController],
-  providers: [AreasService, AreaRepository],
+  providers: [AreasService, AreaRepository, LoggerService],
   exports: [AreasService, AreaRepository],
 })
 export class AreasModule {}

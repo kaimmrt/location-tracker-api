@@ -4,11 +4,15 @@ import { AreasService } from './areas.service';
 import { CreateAreaDto } from './dto/create-area.dto';
 import { AreaDto } from './dto/area-response.dto';
 import { BaseResponse } from 'src/shared/base-response.dto';
+import { LoggerService } from '../../shared/services/logger.service';
 
 @ApiTags(AreasController.name)
 @Controller('areas')
 export class AreasController {
-  constructor(private readonly areasService: AreasService) {}
+  constructor(
+    private readonly areasService: AreasService,
+    private readonly logger: LoggerService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new geographical area' })
@@ -21,7 +25,18 @@ export class AreasController {
   public async create(
     @Body() body: CreateAreaDto,
   ): Promise<BaseResponse<AreaDto>> {
+    this.logger.log(
+      `POST /areas - Creating area: ${body.name}`,
+      'AreasController',
+    );
+
     const area = await this.areasService.create(body);
+
+    this.logger.log(
+      `POST /areas - Area created successfully with ID: ${area.id}`,
+      'AreasController',
+    );
+
     return {
       data: area,
       message: 'Area created successfully',
@@ -38,7 +53,15 @@ export class AreasController {
     type: BaseResponse<AreaDto[]>,
   })
   public async findAll(): Promise<BaseResponse<AreaDto[]>> {
+    this.logger.log('GET /areas - Fetching all areas', 'AreasController');
+
     const areas = await this.areasService.findAll();
+
+    this.logger.log(
+      `GET /areas - Retrieved ${areas.length} areas`,
+      'AreasController',
+    );
+
     return {
       data: areas,
       message: 'Areas retrieved successfully',

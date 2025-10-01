@@ -10,6 +10,7 @@ import { LocationRepository } from '../../repositories/location.repository';
 import { AreaRepository } from '../../repositories/area.repository';
 import { UserAreaStateRepository } from '../../repositories/user-area-state.repository';
 import { EntryLogRepository } from '../../repositories/entry-log.repository';
+import { LoggerService } from '../../shared/services/logger.service';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { EntryLogRepository } from '../../repositories/entry-log.repository';
     AreaRepository,
     UserAreaStateRepository,
     EntryLogRepository,
+    LoggerService,
   ],
 })
 export class LocationsModule {}

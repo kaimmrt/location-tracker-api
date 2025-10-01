@@ -1,10 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { GlobalExceptionFilter } from './shared/filters/global-exception.filter';
 import { RequestIdInterceptor } from './shared/interceptors/request-id.interceptor';
+import { LoggerService } from './shared/services/logger.service';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,7 +22,8 @@ async function bootstrap() {
   );
 
   // Global exception filter
-  app.useGlobalFilters(new GlobalExceptionFilter());
+  const loggerService = app.get(LoggerService);
+  app.useGlobalFilters(new GlobalExceptionFilter(loggerService));
 
   // Global request ID interceptor
   app.useGlobalInterceptors(new RequestIdInterceptor());

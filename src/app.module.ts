@@ -6,6 +6,8 @@ import { AppService } from './app.service';
 import { AreasModule } from './modules/areas/areas.module';
 import { LocationsModule } from './modules/locations/locations.module';
 import { RequestIdMiddleware } from './shared/middleware/request-id.middleware';
+import { LoggingMiddleware } from './shared/middleware/logging.middleware';
+import { LoggerService } from './shared/services/logger.service';
 
 @Module({
   imports: [
@@ -29,12 +31,12 @@ import { RequestIdMiddleware } from './shared/middleware/request-id.middleware';
     LocationsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, LoggerService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(RequestIdMiddleware)
+      .apply(RequestIdMiddleware, LoggingMiddleware)
       .forRoutes('*');
   }
 }

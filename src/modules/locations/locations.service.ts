@@ -5,6 +5,7 @@ import { AreaRepository } from '../../repositories/area.repository';
 import { UserAreaStateRepository } from '../../repositories/user-area-state.repository';
 import { EntryLogRepository } from '../../repositories/entry-log.repository';
 import { EntryEventEnum } from '../../shared/entry-event.enum';
+import { LoggerService } from '../../shared/services/logger.service';
 
 @Injectable()
 export class LocationsService {
@@ -13,18 +14,28 @@ export class LocationsService {
     private readonly areaRepository: AreaRepository,
     private readonly userAreaStateRepository: UserAreaStateRepository,
     private readonly entryLogRepository: EntryLogRepository,
+    private readonly logger: LoggerService,
   ) {}
 
   public async ingest(dto: PostLocationDto) {
+    this.logger.log('Starting location ingestion', 'LocationsService');
+
     await this.locationRepository.createFromLatLon(
       dto.userId,
       dto.lat,
       dto.lon,
     );
 
+    this.logger.log('Location saved to database', 'LocationsService');
+
     const areas = await this.areaRepository.findContainingPoint(
       dto.lon,
       dto.lat,
+    );
+
+    this.logger.log(
+      `Found ${areas.length} areas containing the point`,
+      'LocationsService',
     );
 
     const currentStates = await this.userAreaStateRepository.findAll();
@@ -41,6 +52,11 @@ export class LocationsService {
     // Find areas user is exiting (was inside, now outside)
     const exitingAreas = userStates.filter(
       (state) => state.isInside && !newAreaIds.has(state.areaId),
+    );
+
+    this.logger.log(
+      `User entering ${enteringAreas.length} areas, exiting ${exitingAreas.length} areas`,
+      'LocationsService',
     );
 
     // Update states and log events
@@ -74,10 +90,28 @@ export class LocationsService {
     if (logEntries.length > 0) {
       try {
         await this.entryLogRepository.insertManyEnterExit(logEntries);
-      } catch (error: unknown) {
-        console.error('Failed to log entry events:', error);
+        this.logger.log(
+          `Successfully logged ${logEntries.length} entry events`,
+          'LocationsService',
+        );
+      } catch {
+        this.logger.error('Failed to log entry events', 'LocationsService');
       }
     }
+
+    // Log location processing
+    this.logger.logLocationProcess(
+      dto.userId,
+      dto.lat,
+      dto.lon,
+      areas.length,
+      logEntries.length,
+    );
+
+    this.logger.log(
+      'Location ingestion completed successfully',
+      'LocationsService',
+    );
 
     return { ok: true, areas, events: logEntries };
   }

@@ -4,14 +4,14 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
-  Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { BaseResponse } from '../base-response.dto';
+import { LoggerService } from '../services/logger.service';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(GlobalExceptionFilter.name);
+  constructor(private readonly logger: LoggerService) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
@@ -48,10 +48,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       userMessage = 'Something went wrong. Please try again later.';
     }
 
-    this.logger.error(
-      `Exception caught: ${message}`,
-      exception instanceof Error ? exception.stack : undefined,
-    );
+    // Log the error using our custom logger
+    if (exception instanceof Error) {
+      this.logger.logError(exception, 'GlobalExceptionFilter');
+    } else {
+      this.logger.error(
+        `Exception caught: ${message}`,
+        'GlobalExceptionFilter',
+      );
+    }
 
     const errorResponse: BaseResponse<null> = {
       data: null,
