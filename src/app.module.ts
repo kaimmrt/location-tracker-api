@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AreasModule } from './modules/areas/areas.module';
+import { LocationsModule } from './modules/locations/locations.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AreasModule } from './modules/areas/areas.module';
       },
     }),
     AreasModule,
+    LocationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
