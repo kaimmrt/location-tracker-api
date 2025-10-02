@@ -19,6 +19,9 @@ FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 
+# Install curl for health checks
+RUN apk add --no-cache curl
+
 # Only copy needed files
 COPY package.json package-lock.json ./
 COPY --from=deps /app/node_modules ./node_modules

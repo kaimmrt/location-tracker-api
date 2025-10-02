@@ -7,6 +7,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AreasModule } from './modules/areas/areas.module';
 import { LocationsModule } from './modules/locations/locations.module';
+import { HealthModule } from './modules/health/health.module';
 import { RequestIdMiddleware } from './shared/middleware/request-id.middleware';
 import { LoggingMiddleware } from './shared/middleware/logging.middleware';
 import { LoggerService } from './shared/services/logger.service';
@@ -43,6 +44,7 @@ import { CACHE_TTL } from './shared/constants/cache.constants';
     }),
     AreasModule,
     LocationsModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService, LoggerService, CacheService],
