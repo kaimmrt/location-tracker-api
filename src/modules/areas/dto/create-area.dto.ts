@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsArray, ArrayMinSize } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateAreaDto {
@@ -11,10 +11,26 @@ export class CreateAreaDto {
   public name!: string;
 
   @ApiProperty({
-    description: 'GeoJSON Polygon representing the area boundaries',
-    example: '{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]}',
+    description: 'Polygon coordinates array [[[lon, lat], [lon, lat], ...]]',
+    example: [
+      [
+        [0, 0],
+        [1, 0],
+        [1, 1],
+        [0, 1],
+        [0, 0],
+      ],
+    ],
+    type: 'array', items: {
+      type: 'array',
+      items: {
+        type: 'array',
+        items: { type: 'number' },
+      },
+    },
   })
-  @IsString()
+  @IsArray()
+  @ArrayMinSize(1)
   @IsNotEmpty()
-  public polygon!: string;
+  public coordinates!: number[][][];
 }

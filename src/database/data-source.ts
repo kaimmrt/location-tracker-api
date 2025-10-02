@@ -9,8 +9,8 @@ const databaseUrl = process.env.DATABASE_URL;
 const AppDataSource = new DataSource({
   type: 'postgres',
   url: databaseUrl,
-  entities: ['src/entities/**/*.entity.{ts,js}'],
-  migrations: ['src/database/migrations/*.{ts,js}'],
+  entities: ['dist/entities/**/*.entity.{ts,js}'],
+  migrations: ['dist/database/migrations/*.{ts,js}'],
   ssl: false,
   logging: false,
 });

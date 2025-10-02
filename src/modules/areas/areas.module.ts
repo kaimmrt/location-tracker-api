@@ -5,11 +5,12 @@ import { AreasService } from './areas.service';
 import { AreasController } from './areas.controller';
 import { AreaRepository } from '../../repositories/area.repository';
 import { LoggerService } from '../../shared/services/logger.service';
+import { CacheService } from '../../shared/services/cache.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Area])],
   controllers: [AreasController],
-  providers: [AreasService, AreaRepository, LoggerService],
+  providers: [AreasService, AreaRepository, LoggerService, CacheService],
   exports: [AreasService, AreaRepository],
 })
 export class AreasModule {}

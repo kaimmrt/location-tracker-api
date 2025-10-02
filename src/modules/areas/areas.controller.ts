@@ -25,17 +25,11 @@ export class AreasController {
   public async create(
     @Body() body: CreateAreaDto,
   ): Promise<BaseResponse<AreaDto>> {
-    this.logger.log(
-      `POST /areas - Creating area: ${body.name}`,
-      'AreasController',
-    );
+    this.logger.log(`POST /areas - Creating area: ${body.name}`,'AreasController');
 
     const area = await this.areasService.create(body);
 
-    this.logger.log(
-      `POST /areas - Area created successfully with ID: ${area.id}`,
-      'AreasController',
-    );
+    this.logger.log(`POST /areas - Area created successfully with ID: ${area.id}`,'AreasController');
 
     return {
       data: area,
@@ -57,10 +51,16 @@ export class AreasController {
 
     const areas = await this.areasService.findAll();
 
-    this.logger.log(
-      `GET /areas - Retrieved ${areas.length} areas`,
-      'AreasController',
-    );
+    this.logger.log(`GET /areas - Retrieved ${areas.length} areas`,'AreasController');
+
+    if (areas.length === 0) {
+      return {
+        data: areas,
+        message: 'No areas found',
+        userMessage: 'No geographical areas are currently available',
+        isSuccess: true,
+      };
+    }
 
     return {
       data: areas,

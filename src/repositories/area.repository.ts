@@ -13,9 +13,27 @@ export class AreaRepository extends BaseRepository<Area> {
     super(areaRepo);
   }
 
-  public async createWithPolygon(name: string, polygon: string): Promise<Area> {
-    const area = this.create({ name, polygon });
-    return this.save(area);
+  public async createWithPolygon(
+    name: string,
+    coordinates: number[][][],
+  ): Promise<Area> {
+    const polygon = JSON.stringify({
+      type: 'Polygon',
+      coordinates,
+    });
+
+    const result = await this.repo
+      .createQueryBuilder()
+      .insert()
+      .into(Area)
+      .values({
+        name,
+        polygon: () => `ST_GeomFromGeoJSON('${polygon}')`,
+      })
+      .returning('*')
+      .execute();
+
+    return result.generatedMaps[0] as Area;
   }
 
   public async findContainingPoint(lon: number, lat: number): Promise<Area[]> {
