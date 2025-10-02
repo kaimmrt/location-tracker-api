@@ -21,7 +21,8 @@ export class CreateAreaDto {
         [0, 0],
       ],
     ],
-    type: 'array', items: {
+    type: 'array',
+    items: {
       type: 'array',
       items: {
         type: 'array',
