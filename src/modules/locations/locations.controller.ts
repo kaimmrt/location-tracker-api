@@ -21,7 +21,8 @@ export class LocationsController {
   public async create(
     @Body() body: PostLocationDto,
   ): Promise<BaseResponse<LocationProcessResultDto>> {
-    const result = await this.locationsService.ingest(body);
+    const result = await this.locationsService.processLocation(body);
+
     return {
       data: {
         areas: result.areas,

@@ -1,10 +1,16 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { AreasService } from './areas.service';
 import { CreateAreaDto } from './dto/create-area.dto';
 import { AreaDto } from './dto/area-response.dto';
 import { BaseResponse } from 'src/shared/base-response.dto';
+import { PaginationResponse } from 'src/shared/pagination-response.dto';
 import { LoggerService } from '../../shared/services/logger.service';
+import {
+  calculatePaginationMeta,
+  normalizePaginationParams,
+  createPaginatedResponse,
+} from '../../shared/utils/pagination.util';
 
 @ApiTags(AreasController.name)
 @Controller('areas')
@@ -25,11 +31,17 @@ export class AreasController {
   public async create(
     @Body() body: CreateAreaDto,
   ): Promise<BaseResponse<AreaDto>> {
-    this.logger.log(`POST /areas - Creating area: ${body.name}`,'AreasController');
+    this.logger.log(
+      `POST /areas - Creating area: ${body.name}`,
+      'AreasController',
+    );
 
     const area = await this.areasService.create(body);
 
-    this.logger.log(`POST /areas - Area created successfully with ID: ${area.id}`,'AreasController');
+    this.logger.log(
+      `POST /areas - Area created successfully with ID: ${area.id}`,
+      'AreasController',
+    );
 
     return {
       data: area,
@@ -43,30 +55,55 @@ export class AreasController {
   @ApiOperation({ summary: 'Get all geographical areas' })
   @ApiResponse({
     status: 200,
-    description: 'List of all areas',
-    type: BaseResponse<AreaDto[]>,
+    description: 'List of all areas with pagination',
+    type: PaginationResponse<AreaDto>,
   })
-  public async findAll(): Promise<BaseResponse<AreaDto[]>> {
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Limit number of results',
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    description: 'Offset for pagination',
+    type: Number,
+  })
+  public async findAll(
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+  ): Promise<PaginationResponse<AreaDto>> {
     this.logger.log('GET /areas - Fetching all areas', 'AreasController');
 
-    const areas = await this.areasService.findAll();
+    const { limit: limitValue, offset: offsetValue } =
+      normalizePaginationParams(limit, offset);
 
-    this.logger.log(`GET /areas - Retrieved ${areas.length} areas`,'AreasController');
+    const { areas, total } = await this.areasService.findAll({
+      limit: limitValue,
+      offset: offsetValue,
+    });
 
-    if (areas.length === 0) {
-      return {
-        data: areas,
-        message: 'No areas found',
-        userMessage: 'No geographical areas are currently available',
-        isSuccess: true,
-      };
-    }
+    this.logger.log(
+      `GET /areas - Retrieved ${areas.length} areas`,
+      'AreasController',
+    );
 
-    return {
-      data: areas,
-      message: 'Areas retrieved successfully',
-      userMessage: 'Geographical areas have been retrieved',
-      isSuccess: true,
-    };
+    const meta = calculatePaginationMeta(
+      limitValue,
+      offsetValue,
+      total,
+      areas.length,
+    );
+
+    return createPaginatedResponse(
+      areas,
+      total,
+      meta,
+      'Areas retrieved successfully',
+      'No areas found',
+      'Geographical areas have been retrieved',
+      'No geographical areas are currently available',
+    );
   }
 }

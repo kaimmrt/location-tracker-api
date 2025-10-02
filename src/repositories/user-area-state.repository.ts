@@ -13,6 +13,13 @@ export class UserAreaStateRepository extends BaseRepository<UserAreaState> {
     super(repo);
   }
 
+  public async findByUserId(userId: string): Promise<UserAreaState[]> {
+    return this.repo
+      .createQueryBuilder('userAreaState')
+      .where('userAreaState.userId = :userId', { userId })
+      .getMany();
+  }
+
   public async upsertState(
     userId: string,
     areaId: string,

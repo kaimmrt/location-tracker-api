@@ -6,6 +6,8 @@ import { UserAreaStateRepository } from '../../repositories/user-area-state.repo
 import { EntryLogRepository } from '../../repositories/entry-log.repository';
 import { EntryEventEnum } from '../../shared/entry-event.enum';
 import { LoggerService } from '../../shared/services/logger.service';
+import { Area } from '../../entities/area.entity';
+import { UserAreaState } from '../../entities/user-area-state.entity';
 
 @Injectable()
 export class LocationsService {
@@ -17,8 +19,8 @@ export class LocationsService {
     private readonly logger: LoggerService,
   ) {}
 
-  public async ingest(dto: PostLocationDto) {
-    this.logger.log('Starting location ingestion', 'LocationsService');
+  public async processLocation(dto: PostLocationDto) {
+    this.logger.log('Starting location processing', 'LocationsService');
 
     await this.locationRepository.createFromLatLon(
       dto.userId,
@@ -26,30 +28,40 @@ export class LocationsService {
       dto.lon,
     );
 
-    this.logger.log('Location saved to database', 'LocationsService');
+    const areas = await this.findContainingAreas(dto.lon, dto.lat);
 
-    const areas = await this.areaRepository.findContainingPoint(
-      dto.lon,
-      dto.lat,
+    const logEntries = await this.processAreaEvents(dto.userId, areas);
+
+    this.logger.log(
+      `Location processed - User: ${dto.userId}, Lat: ${dto.lat}, Lon: ${dto.lon}, Areas: ${areas.length}, Events: ${logEntries.length}`,
+      'LocationsService',
     );
+
+    this.logger.log(
+      'Location processing completed successfully',
+      'LocationsService',
+    );
+
+    return { ok: true, areas, events: logEntries };
+  }
+
+  private async findContainingAreas(lon: number, lat: number): Promise<Area[]> {
+    const areas = await this.areaRepository.findContainingPoint(lon, lat);
 
     this.logger.log(
       `Found ${areas.length} areas containing the point`,
       'LocationsService',
     );
 
-    const currentStates = await this.userAreaStateRepository.findAll();
-    const userStates = currentStates.filter(
-      (state) => state.userId === dto.userId,
-    );
+    return areas;
+  }
 
-    const currentAreaIds = new Set(userStates.map((state) => state.areaId));
-    const newAreaIds = new Set(areas.map((area) => area.id));
+  private async processAreaEvents(userId: string, newAreas: Area[]) {
+    const userStates = await this.userAreaStateRepository.findByUserId(userId);
 
-    const enteringAreas = areas.filter((area) => !currentAreaIds.has(area.id));
-
-    const exitingAreas = userStates.filter(
-      (state) => state.isInside && !newAreaIds.has(state.areaId),
+    const { enteringAreas, exitingAreas } = this.identifyAreaChanges(
+      userStates,
+      newAreas,
     );
 
     this.logger.log(
@@ -57,12 +69,40 @@ export class LocationsService {
       'LocationsService',
     );
 
+    const logEntries = await this.handleAreaStateChanges(
+      userId,
+      enteringAreas,
+      exitingAreas,
+    );
+
+    return logEntries;
+  }
+
+  private identifyAreaChanges(userStates: UserAreaState[], newAreas: Area[]) {
+    const currentAreaIds = new Set(userStates.map((state) => state.areaId));
+    const newAreaIds = new Set(newAreas.map((area) => area.id));
+
+    const enteringAreas = newAreas.filter(
+      (area) => !currentAreaIds.has(area.id),
+    );
+    const exitingAreas = userStates.filter(
+      (state) => state.isInside && !newAreaIds.has(state.areaId),
+    );
+
+    return { enteringAreas, exitingAreas };
+  }
+
+  private async handleAreaStateChanges(
+    userId: string,
+    enteringAreas: Area[],
+    exitingAreas: UserAreaState[],
+  ) {
     const logEntries = [];
 
     for (const area of enteringAreas) {
-      await this.userAreaStateRepository.upsertState(dto.userId, area.id, true);
+      await this.userAreaStateRepository.upsertState(userId, area.id, true);
       logEntries.push({
-        userId: dto.userId,
+        userId,
         areaId: area.id,
         event: EntryEventEnum.ENTER,
       });
@@ -70,42 +110,39 @@ export class LocationsService {
 
     for (const state of exitingAreas) {
       await this.userAreaStateRepository.upsertState(
-        dto.userId,
+        userId,
         state.areaId,
         false,
       );
       logEntries.push({
-        userId: dto.userId,
+        userId,
         areaId: state.areaId,
         event: EntryEventEnum.EXIT,
       });
     }
 
     if (logEntries.length > 0) {
-      try {
-        await this.entryLogRepository.insertManyEnterExit(logEntries);
-        this.logger.log(
-          `Successfully logged ${logEntries.length} entry events`,
-          'LocationsService',
-        );
-      } catch {
-        this.logger.error('Failed to log entry events', 'LocationsService');
-      }
+      await this.logEntryEvents(logEntries);
     }
 
-    this.logger.logLocationProcess(
-      dto.userId,
-      dto.lat,
-      dto.lon,
-      areas.length,
-      logEntries.length,
-    );
+    return logEntries;
+  }
 
-    this.logger.log(
-      'Location ingestion completed successfully',
-      'LocationsService',
-    );
-
-    return { ok: true, areas, events: logEntries };
+  private async logEntryEvents(
+    logEntries: Array<{
+      userId: string;
+      areaId: string;
+      event: EntryEventEnum;
+    }>,
+  ): Promise<void> {
+    try {
+      await this.entryLogRepository.insertManyEnterExit(logEntries);
+      this.logger.log(
+        `Successfully logged ${logEntries.length} entry events`,
+        'LocationsService',
+      );
+    } catch {
+      this.logger.error('Failed to log entry events', 'LocationsService');
+    }
   }
 }

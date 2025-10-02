@@ -22,7 +22,9 @@ export class LocationRepository extends BaseRepository<Location> {
       type: 'Point',
       coordinates: [lon, lat],
     } as unknown as Location['point'];
+
     const entity = this.create({ userId, point } as Partial<Location>);
+
     return this.save(entity);
   }
 }

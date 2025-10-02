@@ -62,31 +62,6 @@ export class LoggerService implements NestLoggerService {
     });
   }
 
-  logLocationProcess(
-    userId: string,
-    lat: number,
-    lon: number,
-    areasFound: number,
-    events: number,
-  ): void {
-    this.logger.info('Location processed', {
-      userId,
-      lat,
-      lon,
-      areasFound,
-      events,
-      type: 'location_processing',
-    });
-  }
-
-  logAreaCreation(areaName: string, userId?: string): void {
-    this.logger.info('Area created', {
-      areaName,
-      userId,
-      type: 'area_creation',
-    });
-  }
-
   logError(error: Error, context: string): void {
     this.logger.error('Application error', {
       message: error.message,

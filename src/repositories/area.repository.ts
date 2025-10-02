@@ -44,4 +44,28 @@ export class AreaRepository extends BaseRepository<Area> {
       })
       .getMany();
   }
+
+  public async findAllWithPagination(
+    limit: number,
+    offset: number,
+  ): Promise<Area[]> {
+    return this.repo
+      .createQueryBuilder('area')
+      .orderBy('area.createdAt', 'DESC')
+      .limit(limit)
+      .offset(offset)
+      .getMany();
+  }
+
+  public async findAllWithPaginationAndCount(
+    limit: number,
+    offset: number,
+  ): Promise<[Area[], number]> {
+    return this.repo
+      .createQueryBuilder('area')
+      .orderBy('area.createdAt', 'DESC')
+      .limit(limit)
+      .offset(offset)
+      .getManyAndCount();
+  }
 }
