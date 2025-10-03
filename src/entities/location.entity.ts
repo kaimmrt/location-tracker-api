@@ -1,6 +1,7 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 import { BaseTrackedEntity } from './base.entity';
 
+@Index(['userId'])
 @Entity({ name: 'locations' })
 export class Location extends BaseTrackedEntity {
   @Column({ type: 'uuid' })
